@@ -1,0 +1,86 @@
+import pandas as pd
+import numpy as np
+
+data=pd.read_csv("https://raw.githubusercontent.com/elena0221/DataAnalysis/main/world-data-2023.csv",sep=',')
+
+#DataFrame中空值替換數字0
+data.fillna(0,inplace=True)
+
+data.dtypes
+
+#分析國家：加拿大、中國、德國、印度、以色列、德國、日本、加拿大
+majorCountries=data[(data['Country']=='United States')|(data['Country']=='China')|(data['Country']=='India')|(data['Country']=='South Korea')|(data['Country']=='Israel')|(data['Country']=='Germany')|(data['Country']=='Japan')|(data['Country']=='Canada')]
+
+#GDP與就業分析：收集GDP、失業率、勞參率和最低工資資料,了解國家的經濟狀況和勞動力市場狀況
+economy=pd.DataFrame({'Country':majorCountries['Country'],'GDP':majorCountries['GDP'],
+             'Unemployment':majorCountries['Unemployment rate'],'Labor_force_participation':majorCountries['Population: Labor force participation (%)'],
+             'Minimum_wage':majorCountries['Minimum wage']})
+
+economy.sort_values(by='Minimum_wage',ascending=True)
+
+#處理數據：$和%符號
+economy['Unemployment']=economy['Unemployment'].str.replace('%','').astype('float')
+economy['GDP']=economy['GDP'].str.replace(',','')
+economy['GDP']=economy['GDP'].str.replace('$','').astype(int)
+economy['Labor_force_participation']=economy['Labor_force_participation'].str.replace('%','').astype('float')
+economy['Minimum_wage']=economy['Minimum_wage'].str.replace('$','').astype('float')
+
+#可視化圖型
+plot=economy.plot.pie(y='GDP',figsize=(3,3),legend=False,labels=economy['Country'])
+plot.axis('off') 
+economy.plot.bar(x='Country',y='Unemployment',title='Unemployment',figsize=(3,3),ylabel='%')
+economy.plot.bar(x='Country',y='Labor_force_participation',title='Labor_force_participation',figsize=(3,3),color='orange',legend=False,ylabel='%')
+economy.plot.bar(x='Country',y='Minimum_wage',title='Minimum_wage',figsize=(3,3),color='#C0C0C0',ylabel='$')
+
+
+#CPI與通貨膨脹分析
+consumption=pd.DataFrame({'Country':majorCountries['Country'],
+                     'CPI':majorCountries['CPI'],
+                    'CPI_change':majorCountries['CPI Change (%)']})
+
+consumption['CPI']=consumption['CPI'].astype('float')
+consumption['CPI_change']=consumption['CPI_change'].astype('string').str.replace('%','').astype('float')
+
+cPlot=consumption.plot.line(x='Country',y=['CPI','CPI_change'],figsize=(10,4))
+cPlot
+
+
+#醫療教育分析
+education=pd.DataFrame({'Country':majorCountries['Country'],'Primary_enrollment':majorCountries['Gross primary education enrollment (%)'],
+             'Tertiary_enrollment':majorCountries['Gross tertiary education enrollment (%)']})
+
+education['Primary_enrollment']=education['Primary_enrollment'].str.replace('%','').astype('float')
+education['Tertiary_enrollment']=education['Tertiary_enrollment'].str.replace('%','').astype('float')
+
+ePlot=education.plot.bar(x='Country',y=['Primary_enrollment','Tertiary_enrollment'],ylabel='%',figsize=(4,4))
+ePlot.legend(fontsize='x-small')
+
+medical=pd.DataFrame({'Country':majorCountries['Country'],'Infant_Mortality':majorCountries['Infant mortality'],'Maternal_Mortality_Ratio':majorCountries['Maternal mortality ratio'],
+             'Physicians_per_Thousand':majorCountries['Physicians per thousand'],'Health_Expenditure':majorCountries['Out of pocket health expenditure']})
+
+medical['Health_Expenditure']=medical['Health_Expenditure'].str.replace('%','').astype('float')
+
+mPlot=medical.plot.line(x='Country',y=['Infant_Mortality','Maternal_Mortality_Ratio','Physicians_per_Thousand','Health_Expenditure'],figsize=(10,3))
+mPlot.legend(fontsize='small')
+
+
+#社會指標分析
+social=pd.DataFrame({'Country':majorCountries['Country'],'Birth_rate':majorCountries['Birth Rate'],
+                     'Life_expectancy':majorCountries['Life expectancy'],
+                    'Fertility_rate':majorCountries['Fertility Rate']})
+
+sPlot=social.plot.bar(x='Country',y=['Life_expectancy','Birth_rate','Fertility_rate'],figsize=(5,4))
+sPlot.legend(fontsize='x-small')
+
+
+#財政與稅收分析
+financial=pd.DataFrame({'Country':majorCountries['Country'],
+                     'Tax_revenue':majorCountries['Tax revenue (%)'],
+                    'Total_tax_rate':majorCountries['Total tax rate']})
+financial.dtypes
+financial['Tax_revenue']=financial['Tax_revenue'].str.replace('%','').astype('float')
+financial['Total_tax_rate']=financial['Total_tax_rate'].str.replace('%','').astype('float')
+
+fPlot=financial.plot.line(x='Country',y=['Tax_revenue','Total_tax_rate'],figsize=(10,3),ylabel='%')
+fPlot.legend(fontsize='small')
+
