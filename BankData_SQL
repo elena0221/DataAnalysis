@@ -1,0 +1,76 @@
+--處理缺失值,將缺失值設為0
+UPDATE BankData1
+SET Marital_Status=0,Income_Category= 0,Education_Level=0
+WHERE Marital_Status='Unknown' OR Income_Category = 'Unknown'OR Education_Level='Unknown';
+
+--月不活躍數與流失客戶數量關係
+SELECT Months_Inactive_12_mon,COUNT(clientnum) AS AttritedCustomer FROM BankData1
+WHERE Attrition_Flag='Attrited Customer' 
+GROUP BY Months_Inactive_12_mon
+
+--收入與流失率關係
+SELECT COUNT(*) AS Attrited_Customer,Income_Category FROM BankData1 
+WHERE Income_Category <> 0 AND Attrition_Flag='Attrited Customer'
+GROUP BY Income_Category ORDER BY COUNT(Attrition_Flag) DESC;
+
+--客戶年齡與信用卡類型關係
+SELECT 
+   CASE 
+    WHEN customer_age BETWEEN 18 AND 30 THEN '18-30'
+    WHEN customer_age BETWEEN 31 AND 40 THEN '31-40'
+    WHEN customer_age BETWEEN 41 AND 50 THEN '41-50'
+   ELSE '51+'
+ END AS age, card_category,COUNT(card_category) AS categoryNum
+FROM BankData1 LEFT JOIN BankData2 ON BankData1.CLIENTNUM=BankData2.CLIENTNUM
+WHERE Attrition_Flag<>'Attrited Customer'
+GROUP BY card_category,age
+
+--不同收入水平客户的平均信用卡使用率和平均交易金额
+SELECT Income_Category, avg(Avg_Utilization_Ratio) AS avgUsage, avg(Total_Trans_Amt) AS avgTransAmt 
+FROM BankData1
+WHERE Income_Category<>0 AND Attrition_Flag<>'Attrited Customer'
+GROUP BY Income_Category;
+
+--客戶年齡與信用卡使用習慣關係
+SELECT 
+  CASE 
+     WHEN customer_age BETWEEN 18 AND 30 THEN '18-30'
+     WHEN customer_age BETWEEN 31 AND 40 THEN '31-40'
+     WHEN customer_age BETWEEN 41 AND 50 THEN '41-50'
+     ELSE '51+'
+  END AS age,
+avg(Total_Trans_Amt) AS avgAmount,avg(total_trans_ct) AS avgCount
+FROM BankData1 
+WHERE Attrition_Flag<>'Attrited Customer'
+GROUP BY age
+
+--信用卡類型和平均過去12個月的不活躍月數
+SELECT card_category,avg(months_inactive_12_mon) AS avgInactiveMons FROM BankData1 
+LEFT JOIN BankData2 ON BankData1.CLIENTNUM=BankData2.CLIENTNUM
+WHERE Attrition_Flag<>'Attrited Customer'
+GROUP BY card_category
+
+--平均可用信度和季度內交易次數變化率
+SELECT income_category,avg_open_to_buy AS avgOpenToBuy,total_amt_chng_q4_q1 AS amtQ1_Q4
+FROM BankData1 WHERE Attrition_Flag<>'Attrited Customer'AND income_category<>0 
+GROUP BY income_category
+
+--客戶年齡和總關係數
+SELECT 
+  CASE 
+    WHEN customer_age BETWEEN 18 AND 30 THEN '18-30'
+    WHEN customer_age BETWEEN 31 AND 40 THEN '31-40'
+    WHEN customer_age BETWEEN 41 AND 50 THEN '41-50'
+    ELSE '51+'
+  END AS age,total_relationship_count AS relationship FROM BankData1 
+WHERE Attrition_Flag<>'Attrited Customer' 
+GROUP BY age
+
+--最低Income_Category
+SELECT CAST(substr(Income_Category,instr(Income_Category,'$')+1,length(Income_Category)) AS Integer) AS Income_Category FROM BankData1
+
+
+
+
+
+
